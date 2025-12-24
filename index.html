@@ -34,7 +34,7 @@
         }
 
         .badge {
-            display: inline-block;
+            display: none;
             background: rgba(0, 0, 0, 0.7);
             border: 2px solid #FFD700;
             color: #FFD700;
@@ -50,6 +50,7 @@
         }
 
         .guide {
+            display: none;
             color: #ccc;
             font-size: 13px;
             margin-bottom: 20px;
@@ -84,7 +85,6 @@
             }
         }
 
-
         #error-log {
             display: none;
             position: absolute;
@@ -95,16 +95,34 @@
             z-index: 999;
             padding: 10px;
         }
+
+        .start-message {
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 20px #FFD700;
+            margin-bottom: 15px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 20px #FFD700, 0 0 30px #FFD700;
+            }
+            50% {
+                text-shadow: 0 0 30px #FFD700, 0 0 40px #FFD700, 0 0 50px #FF0000;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div id="error-log"></div>
     <div id="ui-layer">
-        <div id="status" class="badge">Chúc em iu có một ngày noel thật tuyệt vời🎄 <br> Iu emmmmmm ❤️</div>
+        <div class="start-message" id="startMessage">✨ Bấm vào để thấy bất ngờ ✨</div>
+        <div id="status" class="badge"></div>
         <div class="guide">
-            <!-- 🖐 <b>Xòe:</b> Bung Quà & Đèn &nbsp;|&nbsp; 👌 <b>Pinch:</b> Xem ảnh &nbsp;|&nbsp; ✊ <b>Nắm:</b> Thu cây -->
-            <!-- &nbsp;|&nbsp; 🤲<b>2 Tay Cong:</b> Trái Tim -->
+ 
         </div>
         <button id="btnStart" onclick="startSystem()">Start</button>
     </div>
@@ -121,7 +139,7 @@
         bgMusic.loop = true; bgMusic.volume = 1.0;
 
         const loader = new THREE.TextureLoader();
-        const photoFiles = ['./img/a1.jpg', './img/a2.jpg', './img/a3.jpg', './img/a4.jpg']; //Thay hoặc thêm số ảnh dòng 319 sửa ở đây và folder img
+        const photoFiles = ['./img/a1.jpg', './img/a2.jpg', './img/a3.jpg', './img/a4.jpg'];
         const photoTextures = [];
         photoFiles.forEach((f, i) => photoTextures[i] = loader.load(f));
 
@@ -180,7 +198,7 @@
         let scene, camera, renderer;
         let groupGold, groupRed, groupGift; 
         let photoMeshes = [];
-        let titleMesh, starMesh;
+        let titleMesh, starMesh, loveTextMesh;
 
         let state = 'TREE';
         let selectedIndex = 0;
@@ -286,7 +304,7 @@
             const borderGeo = new THREE.PlaneGeometry(9, 9);
             const borderMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
 
-            for (let i = 0; i < 7; i++) { //số ảnh hiển thị 4
+            for (let i = 0; i < 4; i++) {
                 const mat = new THREE.MeshBasicMaterial({
                     map: photoTextures[i], side: THREE.DoubleSide
                 });
@@ -452,42 +470,31 @@
 
             } else if (state === 'EXPLODE') {
                 titleMesh.visible = false; starMesh.visible = false;
-
-                const baseAngle = groupGold.rotation.y;
-                const angleStep = (Math.PI * 2) / 5;
-                let bestIdx = 0; let maxZ = -999;
-
+                
+                // Hiển thị tất cả ảnh cố định
                 photoMeshes.forEach((mesh, i) => {
                     mesh.visible = true;
-                    const angle = baseAngle + i * angleStep;
-                    const x = Math.sin(angle) * CONFIG.photoOrbitRadius;
-                    const z = Math.cos(angle) * CONFIG.photoOrbitRadius;
-                    const y = Math.sin(time + i) * 3;
-
-                    mesh.position.lerp(new THREE.Vector3(x, y, z), 0.1);
+                    // Đặt ảnh theo hàng ngang
+                    const spacing = 15;
+                    const totalWidth = (photoMeshes.length - 1) * spacing;
+                    const x = -totalWidth / 2 + i * spacing;
+                    mesh.position.lerp(new THREE.Vector3(x, 0, 40), 0.1);
                     mesh.lookAt(camera.position);
-
-                    if (z > maxZ) { maxZ = z; bestIdx = i; }
-
-                    if (z > 5) {
-                        const distScale = 1.0 + (z / CONFIG.photoOrbitRadius) * 0.8;
-                        mesh.scale.lerp(new THREE.Vector3(distScale, distScale, distScale), 0.1);
-                    } else {
-                        mesh.scale.lerp(new THREE.Vector3(0.6, 0.6, 0.6), 0.1);
-                    }
+                    mesh.scale.lerp(new THREE.Vector3(1.5, 1.5, 1.5), 0.1);
                 });
-                selectedIndex = bestIdx;
 
             } else if (state === 'PHOTO') {
+                titleMesh.visible = false; starMesh.visible = false;
+                
+                // Hiển thị tất cả ảnh cố định (giống EXPLODE)
                 photoMeshes.forEach((mesh, i) => {
-                    if (i === selectedIndex) {
-                        mesh.position.lerp(new THREE.Vector3(0, 0, 60), 0.1);
-                        mesh.scale.lerp(new THREE.Vector3(5, 5, 5), 0.1);
-                        mesh.lookAt(camera.position);
-                        mesh.rotation.z = 0;
-                    } else {
-                        mesh.scale.lerp(new THREE.Vector3(0, 0, 0), 0.1);
-                    }
+                    mesh.visible = true;
+                    const spacing = 15;
+                    const totalWidth = (photoMeshes.length - 1) * spacing;
+                    const x = -totalWidth / 2 + i * spacing;
+                    mesh.position.lerp(new THREE.Vector3(x, 0, 40), 0.1);
+                    mesh.lookAt(camera.position);
+                    mesh.scale.lerp(new THREE.Vector3(1.5, 1.5, 1.5), 0.1);
                 });
             }
 
@@ -496,11 +503,14 @@
 
         function startSystem() {
             document.getElementById('btnStart').style.display = 'none';
+            document.getElementById('startMessage').style.display = 'none';
+            document.getElementById('status').style.display = 'inline-block';
+            document.getElementById('status').innerText = 'Chúc bé Băng có một ngày noel thật tuyệt vời🎄\nIu emmmmmm ❤️';
+            
             bgMusic.play().catch(e => console.log(e));
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
-            const ctx = canvas.getContext('2d');
             const statusDiv = document.getElementById('status');
 
             let frameCnt = 0;
@@ -508,8 +518,6 @@
             hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
             hands.onResults(results => {
-                ctx.clearRect(0, 0, 100, 75); ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
 
                 // Kiểm tra 2 tay làm trái tim
                 if (results.multiHandLandmarks.length === 2) {
