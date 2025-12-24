@@ -84,28 +84,6 @@
             }
         }
 
-        #camera-preview {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-
-            width: 96px;
-            height: 72px;
-
-            border-radius: 10px;
-            overflow: hidden;
-
-            border: 1.5px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-
-            transform: scaleX(-1);
-            opacity: 0.65;
-
-            z-index: 200;
-            pointer-events: none;
-            background: #000;
-        }
-
 
         #error-log {
             display: none;
@@ -522,7 +500,6 @@
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
-            const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
             const statusDiv = document.getElementById('status');
 
